@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ABX Audio Upload</title>
+</head>
+<body>
+  <h1>Upload a .flac file for ABX testing</h1>
+  <form action="/" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".flac" required>
+    <button type="submit">Upload</button>
+  </form>
+
+  {% if flac_file and mp3_file %}
+    <h2>Original FLAC</h2>
+    <audio controls>
+      <source src="{{ flac_file }}" type="audio/flac">
+      Your browser does not support the audio element.
+    </audio>
+
+    <h2>Converted MP3 (320kbps)</h2>
+    <audio controls>
+      <source src="{{ mp3_file }}" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+  {% endif %}
+</body>
+</html>
