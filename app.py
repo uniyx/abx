@@ -14,18 +14,30 @@ def index():
         if file and file.filename.endswith(".flac"):
             unique_id = uuid.uuid4().hex
             flac_filename = f"{unique_id}.flac"
-            mp3_filename = f"{unique_id}.mp3"
-            flac_path = os.path.join(UPLOAD_FOLDER, flac_filename)
-            mp3_path = os.path.join(UPLOAD_FOLDER, mp3_filename)
+            wav_a_filename = f"{unique_id}_a.wav"
+            wav_b_filename = f"{unique_id}_b.wav"
 
+            flac_path = os.path.join(UPLOAD_FOLDER, flac_filename)
+            wav_a_path = os.path.join(UPLOAD_FOLDER, wav_a_filename)
+            wav_b_path = os.path.join(UPLOAD_FOLDER, wav_b_filename)
+
+            # Save uploaded FLAC
             file.save(flac_path)
 
-            # Convert using ffmpeg-python
-            ffmpeg.input(flac_path).output(mp3_path, audio_bitrate="320k").run(quiet=True, overwrite_output=True)
+            # Convert to original quality WAV (lossless)
+            ffmpeg.input(flac_path).output(wav_a_path).run(overwrite_output=True, quiet=True)
 
-            return render_template("index.html", flac_file=f"/{flac_path}", mp3_file=f"/{mp3_path}")
+            # Convert to compressed WAV (simulate lossy)
+            ffmpeg.input(flac_path).output(wav_b_path, audio_bitrate="128k").run(overwrite_output=True, quiet=True)
 
-    return render_template("index.html", flac_file=None, mp3_file=None)
+            return render_template(
+                "index.html",
+                wav_a=f"/{wav_a_path}",
+                wav_b=f"/{wav_b_path}",
+                flac_base=flac_filename.replace(".flac", "")
+            )
+
+    return render_template("index.html", wav_a=None, wav_b=None, flac_base=None)
 
 @app.route("/static/audio/<path:filename>")
 def audio(filename):
