@@ -1,160 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>ABX Web Audio Test</title>
-    <style>
-        button {
-            margin: 8px;
-            padding: 10px 16px;
-            font-size: 16px;
-        }
-
-        #controls {
-            margin-top: 20px;
-        }
-
-        #volume-control {
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>ABX Web Audio Test</title>
+  <style>
+    button {
+      margin: 8px;
+      padding: 10px 16px;
+      font-size: 16px;
+    }
+    #controls {
+      margin-top: 20px;
+    }
+    #volume-control {
+      margin-top: 10px;
+    }
+  </style>
 </head>
-
 <body>
-    <h1>ABX Audio Test</h1>
+  <h1>ABX Audio Test</h1>
 
-    <form action="/" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".flac" required>
-        <button type="submit">Upload and Convert</button>
-    </form>
+  <form action="/" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".flac" required>
+    <button type="submit">Upload and Convert</button>
+  </form>
 
-    {% if flac_base %}
+  {% if flac_base %}
     <div id="controls">
-        <h2>ABX Controls</h2>
-        <button onclick="switchToA()">Switch to A</button>
-        <button onclick="switchToX()">Switch to X</button>
-        <button onclick="switchToB()">Switch to B</button>
-        <button onclick="pauseAudio()">Pause</button>
-        <button onclick="resetTrial()">Reset Trial</button>
+      <h2>ABX Controls</h2>
+      <button onclick="switchToA()">Switch to A</button>
+      <button onclick="switchToX()">Switch to X</button>
+      <button onclick="switchToB()">Switch to B</button>
+      <button id="pause-button" onclick="pauseAudio()">Pause</button>
+      <button onclick="resetTrial()">Reset Trial</button>
 
-        <div id="volume-control">
-            <label for="volume">Volume: <span id="volume-label">50%</span></label>
-            <input type="range" id="volume" min="0" max="100" value="50">
-        </div>
+      <div id="volume-control">
+        <label for="volume">Volume: <span id="volume-label">50%</span></label>
+        <input type="range" id="volume" min="0" max="100" value="50">
+      </div>
     </div>
 
     <p id="status">Status: Not started</p>
 
     <script>
-        let audioContext;
-        let sourceA, sourceB;
-        let gainA, gainB, masterGain;
-        let started = false;
-        let currentX = null;
-
-        async function loadAudio(url) {
-            const res = await fetch(url);
-            const arrayBuffer = await res.arrayBuffer();
-            return await audioContext.decodeAudioData(arrayBuffer);
-        }
-
-        async function setupAudio() {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = audioContext.createGain();
-            masterGain.gain.value = 0.5;
-            masterGain.connect(audioContext.destination);
-
-            const bufferA = await loadAudio("{{ url_for('audio', filename=flac_base + '_a.wav') }}");
-            const bufferB = await loadAudio("{{ url_for('audio', filename=flac_base + '_b.wav') }}");
-
-            sourceA = audioContext.createBufferSource();
-            sourceB = audioContext.createBufferSource();
-            sourceA.buffer = bufferA;
-            sourceB.buffer = bufferB;
-
-            gainA = audioContext.createGain();
-            gainB = audioContext.createGain();
-
-            gainA.gain.value = 0;
-            gainB.gain.value = 0;
-
-            sourceA.connect(gainA).connect(masterGain);
-            sourceB.connect(gainB).connect(masterGain);
-
-            sourceA.start();
-            sourceB.start();
-
-            started = true;
-            document.getElementById("status").textContent = "Status: Test in progress";
-        }
-
-        async function ensureStarted() {
-            if (!started) {
-                await setupAudio();
-            }
-        }
-
-        async function switchToA() {
-            await ensureStarted();
-            gainA.gain.setValueAtTime(1, audioContext.currentTime);
-            gainB.gain.setValueAtTime(0, audioContext.currentTime);
-            document.getElementById("status").textContent = "Status: Listening to A";
-        }
-
-        async function switchToB() {
-            await ensureStarted();
-            gainA.gain.setValueAtTime(0, audioContext.currentTime);
-            gainB.gain.setValueAtTime(1, audioContext.currentTime);
-            document.getElementById("status").textContent = "Status: Listening to B";
-        }
-
-        async function switchToX() {
-            await ensureStarted();
-
-            if (currentX === null) {
-                currentX = Math.random() < 0.5 ? 'A' : 'B';
-            }
-
-            if (currentX === 'A') {
-                gainA.gain.setValueAtTime(1, audioContext.currentTime);
-                gainB.gain.setValueAtTime(0, audioContext.currentTime);
-                document.getElementById("status").textContent = "Status: Listening to X (locked as A)";
-            } else {
-                gainA.gain.setValueAtTime(0, audioContext.currentTime);
-                gainB.gain.setValueAtTime(1, audioContext.currentTime);
-                document.getElementById("status").textContent = "Status: Listening to X (locked as B)";
-            }
-        }
-
-        function resetTrial() {
-            currentX = null;
-            document.getElementById("status").textContent = "Status: Trial reset — X will be re-randomized on next click";
-        }
-
-        async function pauseAudio() {
-        if (!started) return;
-
-        if (audioContext.state === "running") {
-            await audioContext.suspend();
-            document.getElementById("status").textContent = "Status: Paused";
-        } else if (audioContext.state === "suspended") {
-            await audioContext.resume();
-            document.getElementById("status").textContent = "Status: Resumed";
-        }
-        }
-
-        const volumeSlider = document.getElementById("volume");
-        const volumeLabel = document.getElementById("volume-label");
-        volumeSlider.addEventListener("input", () => {
-            const value = volumeSlider.value;
-            volumeLabel.textContent = `${value}%`;
-            if (masterGain) {
-                masterGain.gain.setValueAtTime(value / 100, audioContext.currentTime);
-            }
-        });
+      const AUDIO_PATH_A = "{{ url_for('audio', filename=flac_base + '_a.wav') }}";
+      const AUDIO_PATH_B = "{{ url_for('audio', filename=flac_base + '_b.wav') }}";
     </script>
-    {% endif %}
+    <script src="{{ url_for('static', filename='abx.js') }}"></script>
+  {% endif %}
 </body>
-
 </html>

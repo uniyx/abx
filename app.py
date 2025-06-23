@@ -1,5 +1,6 @@
 import os
 import uuid
+import random
 import ffmpeg
 from flask import Flask, request, render_template, send_from_directory
 
@@ -14,30 +15,40 @@ def index():
         if file and file.filename.endswith(".flac"):
             unique_id = uuid.uuid4().hex
             flac_filename = f"{unique_id}.flac"
-            wav_a_filename = f"{unique_id}_a.wav"
-            wav_b_filename = f"{unique_id}_b.wav"
+            original_wav = f"{unique_id}_original.wav"
+            compressed_wav = f"{unique_id}_compressed.wav"
+            output_A = f"{unique_id}_A.wav"
+            output_B = f"{unique_id}_B.wav"
 
             flac_path = os.path.join(UPLOAD_FOLDER, flac_filename)
-            wav_a_path = os.path.join(UPLOAD_FOLDER, wav_a_filename)
-            wav_b_path = os.path.join(UPLOAD_FOLDER, wav_b_filename)
+            original_path = os.path.join(UPLOAD_FOLDER, original_wav)
+            compressed_path = os.path.join(UPLOAD_FOLDER, compressed_wav)
+            A_path = os.path.join(UPLOAD_FOLDER, output_A)
+            B_path = os.path.join(UPLOAD_FOLDER, output_B)
 
-            # Save uploaded FLAC
+            # Save original FLAC
             file.save(flac_path)
 
-            # Convert to original quality WAV (lossless)
-            ffmpeg.input(flac_path).output(wav_a_path).run(overwrite_output=True, quiet=True)
+            # Convert to high-quality WAV (original)
+            ffmpeg.input(flac_path).output(original_path).run(overwrite_output=True, quiet=True)
 
-            # Convert to compressed WAV (simulate lossy)
-            ffmpeg.input(flac_path).output(wav_b_path, audio_bitrate="128k").run(overwrite_output=True, quiet=True)
+            # Convert to lower-quality WAV (compressed)
+            ffmpeg.input(flac_path).output(compressed_path, audio_bitrate="128k").run(overwrite_output=True, quiet=True)
+
+            # Randomly assign A and B
+            if random.choice([True, False]):
+                os.rename(original_path, A_path)
+                os.rename(compressed_path, B_path)
+            else:
+                os.rename(original_path, B_path)
+                os.rename(compressed_path, A_path)
 
             return render_template(
                 "index.html",
-                wav_a=f"/{wav_a_path}",
-                wav_b=f"/{wav_b_path}",
-                flac_base=flac_filename.replace(".flac", "")
+                flac_base=unique_id
             )
 
-    return render_template("index.html", wav_a=None, wav_b=None, flac_base=None)
+    return render_template("index.html", flac_base=None)
 
 @app.route("/static/audio/<path:filename>")
 def audio(filename):
