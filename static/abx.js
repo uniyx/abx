@@ -6,6 +6,9 @@ let currentX = null;
 let currentTrack = null;
 let decodedBufferA, decodedBufferB;
 
+let trialNumber = 0;
+let correctGuesses = 0;
+
 async function loadAudio(url) {
   const res = await fetch(url);
   const arrayBuffer = await res.arrayBuffer();
@@ -167,6 +170,36 @@ async function pauseAudio() {
 
     btn.textContent = "Pause";
   }
+}
+
+function submitGuess(choice) {
+  if (currentX === null) {
+    alert("Please listen to X before guessing.");
+    return;
+  }
+
+  trialNumber++;
+  const correct = currentX === choice;
+  if (correct) correctGuesses++;
+
+  if (trialNumber >= TOTAL_TRIALS) {
+    showResults();
+  } else {
+    updateStatus(`Trial ${trialNumber}/${TOTAL_TRIALS} complete. Click "Switch to X" to continue.`);
+    currentX = null;
+  }
+}
+
+function showResults() {
+  const resultDiv = document.getElementById("result");
+  const resultText = document.getElementById("result-text");
+
+  resultText.textContent = `You got ${correctGuesses} out of ${TOTAL_TRIALS} correct.`;
+  resultDiv.style.display = "block";
+
+  // Hide ABX controls
+  document.getElementById("guess-buttons").style.display = "none";
+  updateStatus("Test complete.");
 }
 
 // Volume control
