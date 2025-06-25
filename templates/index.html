@@ -2,51 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ABX Web Audio Test</title>
-  <style>
-    button {
-      margin: 8px;
-      padding: 10px 16px;
-      font-size: 16px;
-    }
-    #controls {
-      margin-top: 20px;
-    }
-    #volume-control {
-      margin-top: 10px;
-    }
-  </style>
+  <title>ABX Audio Test</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
-<body>
-  <h1>ABX Audio Test</h1>
+<body class="d-flex flex-column align-items-center justify-content-center min-vh-100 bg-dark text-white">
 
-  <form action="/" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" accept=".flac" required>
-    <button type="submit">Upload and Convert</button>
-  </form>
+  <div class="container text-center">
+    <h1 class="mb-4">ABX Audio Test</h1>
 
-  {% if flac_base %}
-    <div id="controls">
-      <h2>ABX Controls</h2>
-      <button onclick="switchToA()">Switch to A</button>
-      <button onclick="switchToX()">Switch to X</button>
-      <button onclick="switchToB()">Switch to B</button>
-      <button id="pause-button" onclick="pauseAudio()">Pause</button>
-      <button onclick="resetTrial()">Reset Trial</button>
+    {% if not flac_base %}
+      <form method="POST" enctype="multipart/form-data" class="mb-5">
+        <input class="form-control mb-3" type="file" name="file" accept=".flac" required>
+        <button class="btn btn-primary" type="submit">Upload FLAC File</button>
+      </form>
+    {% endif %}
 
-      <div id="volume-control">
-        <label for="volume">Volume: <span id="volume-label">50%</span></label>
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    {% if flac_base %}
+      <h5 class="mb-4">Now Playing: {{ filename }}</h5>
+
+      <div class="mb-3">
+        <button class="btn btn-outline-light mx-1" onclick="switchToA()">Switch to A</button>
+        <button class="btn btn-outline-light mx-1" onclick="switchToX()">Switch to X</button>
+        <button class="btn btn-outline-light mx-1" onclick="switchToB()">Switch to B</button>
+      </div>
+
+      <div class="mb-3">
+        <button class="btn btn-secondary mx-1" id="pause-button" onclick="pauseAudio()">Pause</button>
+        <button class="btn btn-warning mx-1" onclick="resetTrial()">Restart Song</button>
+        <a href="/" class="btn btn-danger mx-1">Restart Test</a>
+      </div>
+
+      <div class="mb-4">
+        <label for="volume" class="form-label">Volume: <span id="volume-label">50%</span></label><br>
         <input type="range" id="volume" min="0" max="100" value="50">
       </div>
-    </div>
 
-    <p id="status">Status: Not started</p>
+      <p id="status">Status: Not started</p>
 
-    <script>
-      const AUDIO_PATH_A = "{{ url_for('audio', filename=flac_base + '_a.wav') }}";
-      const AUDIO_PATH_B = "{{ url_for('audio', filename=flac_base + '_b.wav') }}";
-    </script>
-    <script src="{{ url_for('static', filename='abx.js') }}"></script>
-  {% endif %}
+      <script>
+        const AUDIO_PATH_A = "{{ url_for('audio', filename=flac_base + '_A.wav') }}";
+        const AUDIO_PATH_B = "{{ url_for('audio', filename=flac_base + '_B.wav') }}";
+      </script>
+      <script src="{{ url_for('static', filename='abx.js') }}"></script>
+    {% endif %}
+  </div>
+
 </body>
 </html>

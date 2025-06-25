@@ -1,0 +1,17 @@
+body {
+  background-color: #121212;
+  color: #eeeeee;
+}
+
+button {
+  font-size: 1rem;
+  padding: 0.6rem 1.2rem;
+}
+
+#status {
+  font-weight: 500;
+}
+
+input[type="range"] {
+  width: 250px;
+}

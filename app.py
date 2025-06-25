@@ -45,7 +45,8 @@ def index():
 
             return render_template(
                 "index.html",
-                flac_base=unique_id
+                flac_base=unique_id,
+                filename=file.filename
             )
 
     return render_template("index.html", flac_base=None)
